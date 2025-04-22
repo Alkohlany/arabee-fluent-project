@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSharedData, useLanguage } from "@/hooks/useSharedData";
@@ -30,11 +29,11 @@ import { useQueryClient } from "@tanstack/react-query";
 
 export default function UsersManager() {
   const navigate = useNavigate();
-  const { users, isLoading, addCreditToUser } = useSharedData();
+  const { users, isLoading, addCreditToUser, refreshData } = useSharedData();
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Dialog states
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -263,6 +262,10 @@ export default function UsersManager() {
     }
   };
 
+  const handleRefresh = () => {
+    refreshData();
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("userToken");
     localStorage.removeItem("userId");
@@ -303,128 +306,124 @@ export default function UsersManager() {
   
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Button variant="ghost" onClick={() => navigate("/dashboard")} className={isRTL ? "ml-2" : "mr-2"}>
+      <Card className="max-w-7xl mx-auto shadow mt-8">
+        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border-b">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">{t("users")}</h1>
+            <div>
+              <CardTitle className="text-2xl font-extrabold text-gray-900">{t("users")}</CardTitle>
+              <CardDescription>{t("usersDescription")}</CardDescription>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleAddCredits} className="flex items-center">
+            <Button onClick={handleRefresh} className="flex items-center" variant="outline">
+              <RefreshCw className="h-5 w-5 mr-2" />
+              {t("refresh")}
+            </Button>
+            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center">
               <PlusCircle className="h-5 w-5 mr-2" />
               {t("addCredit")}
             </Button>
-            <Button onClick={handleAddUser} className="flex items-center">
+            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center">
               <UserPlus className="h-5 w-5 mr-2" />
               {t("addUser")}
             </Button>
           </div>
-        </div>
-      </header>
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <CardTitle>{t("usersTitle")}</CardTitle>
-                <CardDescription>{t("usersDescription")}</CardDescription>
-              </div>
-              <div className="relative">
-                <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 transform -translate-y-1/2 text-gray-400`} />
-                <Input
-                  placeholder={t("searchUsers")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={isRTL ? "pl-3 pr-10 w-full md:w-64" : "pl-10 pr-3 w-full md:w-64"}
-                />
-              </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center mb-4">
+            <div className="relative flex-1 max-w-xs">
+              <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 transform -translate-y-1/2 text-gray-400`} />
+              <Input
+                placeholder={t("searchUsers")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={isRTL ? "pl-3 pr-10 w-full" : "pl-10 pr-3 w-full"}
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8">{t("loading")}</div>
-            ) : filteredUsers.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("email")}</TableHead>
-                      <TableHead>{t("userType")}</TableHead>
-                      <TableHead>{t("status")}</TableHead>
-                      <TableHead>{t("country")}</TableHead>
-                      <TableHead>{t("credit")}</TableHead>
-                      <TableHead>{t("startDate")}</TableHead>
-                      <TableHead>{t("expiryDate")}</TableHead>
-                      <TableHead className={isRTL ? "text-right" : "text-left"}>{t("actions")}</TableHead>
+          </div>
+          {isLoading ? (
+            <div className="text-center py-8">{t("loadingData")}</div>
+          ) : filteredUsers.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t("email")}</TableHead>
+                    <TableHead>{t("userType")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
+                    <TableHead>{t("country")}</TableHead>
+                    <TableHead>{t("credit")}</TableHead>
+                    <TableHead>{t("startDate")}</TableHead>
+                    <TableHead>{t("expiryDate")}</TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>{t("actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.Email}</TableCell>
+                      <TableCell>{user.User_Type}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.Block === "Not Blocked" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          {user.Block}
+                        </span>
+                      </TableCell>
+                      <TableCell>{user.Country}</TableCell>
+                      <TableCell>{user.Credits}</TableCell>
+                      <TableCell>{user.Start_Date}</TableCell>
+                      <TableCell>{user.Expiry_Time}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsViewDialogOpen(true)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {t("viewDetails")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsEditDialogOpen(true)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            {t("edit")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsRenewDialogOpen(true)}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            {t("renew")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash className="h-4 w-4 mr-1" />
+                            {t("delete")}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.Email}</TableCell>
-                        <TableCell>{user.User_Type}</TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs ${user.Block === "Not Blocked" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                            {user.Block}
-                          </span>
-                        </TableCell>
-                        <TableCell>{user.Country}</TableCell>
-                        <TableCell>{user.Credits}</TableCell>
-                        <TableCell>{user.Start_Date}</TableCell>
-                        <TableCell>{user.Expiry_Time}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(user)}
-                            >
-                              <Eye className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                              {t("viewDetails")}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditUser(user)}
-                            >
-                              <Edit className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                              {t("edit")}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRenewUser(user)}
-                            >
-                              <RefreshCw className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                              {t("renew")}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <Trash className={`h-4 w-4 ${isRTL ? "ml-2" : "mr-2"}`} />
-                              {t("delete")}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                {t("noUsers")}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              {t("noUsers")}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <ViewUserDialog 
         isOpen={isViewDialogOpen} 

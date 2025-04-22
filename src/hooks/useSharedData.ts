@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useLanguage } from "./useLanguage";
@@ -137,10 +136,10 @@ export const refundOperation = async (operation: Operation): Promise<boolean> =>
     // Calculate new credits
     const newCredit = currentCredit + refundAmount;
     
-    // Update user's credit
+    // Update user's credit with .0 as required
     const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${operation.UID}.json?auth=${token}`;
     const updateData = JSON.stringify({
-      Credits: newCredit.toString()
+      Credits: newCredit.toString() + ".0"
     });
     
     const response = await fetch(url, {
