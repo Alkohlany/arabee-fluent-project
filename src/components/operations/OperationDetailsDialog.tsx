@@ -3,8 +3,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage, formatTimeString } from "@/hooks/useSharedData";
-import RTFToHTML from "@/hooks/rtf-to-html";
-import { useEffect, useState } from "react";
 
 interface Operation {
   OprationID: string;
@@ -33,19 +31,8 @@ interface OperationDetailsDialogProps {
 }
 
 export const OperationDetailsDialog = ({ operation, isOpen, onClose }: OperationDetailsDialogProps) => {
-  const { t, isRTL } = useLanguage();
-  const [logHtml, setLogHtml] = useState<string>("");
-
-  useEffect(() => {
-    if (operation?.LogOpration) {
-      const parser = new RTFToHTML();
-      parser.convertRTF(operation.LogOpration, (err: any, htmlString: string) => {
-        if (!err) setLogHtml(htmlString);
-        else setLogHtml("<pre>Error parsing RTF</pre>");
-      });
-    }
-  }, [operation?.LogOpration]);
-
+  const { t, language, isRTL } = useLanguage();
+  
   if (!operation) return null;
 
   const detailItems = [
@@ -73,7 +60,7 @@ export const OperationDetailsDialog = ({ operation, isOpen, onClose }: Operation
         <DialogHeader>
           <DialogTitle>{t("operationDetails")}</DialogTitle>
         </DialogHeader>
-
+        
         <ScrollArea className="h-[60vh]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             {detailItems.map((item, index) => (
@@ -82,19 +69,18 @@ export const OperationDetailsDialog = ({ operation, isOpen, onClose }: Operation
                 <div className="font-medium mt-1">{item.value}</div>
               </div>
             ))}
-
+            
             {operation.LogOpration && (
               <div className="col-span-1 md:col-span-2 border rounded-md p-3">
                 <div className="text-sm text-muted-foreground">Log</div>
-                <div
-                  className="mt-2 text-sm bg-muted p-2 rounded"
-                  dangerouslySetInnerHTML={{ __html: logHtml }}
-                />
+                <pre className="mt-2 whitespace-pre-wrap text-sm bg-muted p-2 rounded">
+                  {operation.LogOpration}
+                </pre>
               </div>
             )}
           </div>
         </ScrollArea>
-
+        
         <DialogFooter>
           <Button onClick={onClose}>{t("close")}</Button>
         </DialogFooter>
