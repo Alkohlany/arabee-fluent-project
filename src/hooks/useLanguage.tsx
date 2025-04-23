@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface TranslationKeys {
   pegasusTool: string;
@@ -8,6 +9,7 @@ interface TranslationKeys {
   settings: string;
   welcome: string;
   logout: string;
+  logoutSuccess: string;
   allRightsReserved: string;
   dashboardTitle: string;
   dashboardDescription: string;
@@ -77,6 +79,59 @@ interface TranslationKeys {
   operationsUsed: string;
   operationCountsInMonth: string;
   usersCountry: string;
+  
+  // Additional keys needed based on TypeScript errors
+  operationType: string;
+  serialNumber: string;
+  brand: string;
+  model: string;
+  imei: string;
+  user: string;
+  credit: string;
+  time: string;
+  status: string;
+  android: string;
+  baseband: string;
+  carrier: string;
+  securityPatch: string;
+  uid: string;
+  hwid: string;
+  operationDetails: string;
+  close: string;
+  addCredit: string;
+  selectUser: string;
+  current: string;
+  creditAmount: string;
+  creditExplanation: string;
+  adding: string;
+  add: string;
+  error: string;
+  addUserError: string;
+  addNewUser: string;
+  enterNewUserData: string;
+  password: string;
+  selectUserType: string;
+  subscriptionPeriod: string;
+  selectSubscriptionPeriod: string;
+  threeMonths: string;
+  sixMonths: string;
+  nineMonths: string;
+  twelveMonths: string;
+  phone: string;
+  selectCountry: string;
+  addUser: string;
+  updateUserError: string;
+  editUserDescription: string;
+  renewUser: string;
+  chooseRenewalMonths: string;
+  numberOfMonths: string;
+  selectMonths: string;
+  renew: string;
+  userDetails: string;
+  completeUserInfo: string;
+  activation: string;
+  startDate: string;
+  expiryDate: string;
 }
 
 const enTranslations: Record<keyof TranslationKeys, string> = {
@@ -87,6 +142,7 @@ const enTranslations: Record<keyof TranslationKeys, string> = {
   settings: "Settings",
   welcome: "Welcome",
   logout: "Logout",
+  logoutSuccess: "Logged out successfully",
   allRightsReserved: "All Rights Reserved",
   dashboardTitle: "Dashboard Overview",
   dashboardDescription: "Statistics and insights at a glance",
@@ -156,6 +212,59 @@ const enTranslations: Record<keyof TranslationKeys, string> = {
   operationsUsed: "Operations Used",
   operationCountsInMonth: "Operation Counts In Month",
   usersCountry: "Users' Country",
+  
+  // Additional translations
+  operationType: "Operation Type",
+  serialNumber: "Serial Number",
+  brand: "Brand",
+  model: "Model",
+  imei: "IMEI",
+  user: "User",
+  credit: "Credit",
+  time: "Time",
+  status: "Status",
+  android: "Android",
+  baseband: "Baseband",
+  carrier: "Carrier",
+  securityPatch: "Security Patch",
+  uid: "UID",
+  hwid: "HWID",
+  operationDetails: "Operation Details",
+  close: "Close",
+  addCredit: "Add Credit",
+  selectUser: "Select User",
+  current: "Current",
+  creditAmount: "Credit Amount",
+  creditExplanation: "Enter the amount of credits to add to the user account",
+  adding: "Adding...",
+  add: "Add",
+  error: "Error",
+  addUserError: "Error adding user",
+  addNewUser: "Add New User",
+  enterNewUserData: "Enter the new user data",
+  password: "Password",
+  selectUserType: "Select User Type",
+  subscriptionPeriod: "Subscription Period",
+  selectSubscriptionPeriod: "Select Subscription Period",
+  threeMonths: "3 Months",
+  sixMonths: "6 Months",
+  nineMonths: "9 Months",
+  twelveMonths: "12 Months",
+  phone: "Phone",
+  selectCountry: "Select Country",
+  addUser: "Add User",
+  updateUserError: "Error updating user",
+  editUserDescription: "Update user information",
+  renewUser: "Renew User",
+  chooseRenewalMonths: "Choose number of months to renew",
+  numberOfMonths: "Number of Months",
+  selectMonths: "Select Months",
+  renew: "Renew",
+  userDetails: "User Details",
+  completeUserInfo: "Complete user information",
+  activation: "Activation",
+  startDate: "Start Date",
+  expiryDate: "Expiry Date"
 };
 
 const arTranslations: Record<keyof TranslationKeys, string> = {
@@ -166,6 +275,7 @@ const arTranslations: Record<keyof TranslationKeys, string> = {
   settings: "الإعدادات",
   welcome: "مرحباً",
   logout: "تسجيل الخروج",
+  logoutSuccess: "تم تسجيل الخروج بنجاح",
   allRightsReserved: "جميع الحقوق محفوظة",
   dashboardTitle: "نظرة عامة على لوحة التحكم",
   dashboardDescription: "إحصائيات ورؤى في لمحة",
@@ -235,6 +345,59 @@ const arTranslations: Record<keyof TranslationKeys, string> = {
   operationsUsed: "العمليات المستخدمة",
   operationCountsInMonth: "عدد العمليات في الشهر",
   usersCountry: "بلدان المستخدمين",
+  
+  // Additional translations
+  operationType: "نوع العملية",
+  serialNumber: "الرقم التسلسلي",
+  brand: "العلامة التجارية",
+  model: "الموديل",
+  imei: "IMEI",
+  user: "المستخدم",
+  credit: "الرصيد",
+  time: "الوقت",
+  status: "الحالة",
+  android: "أندرويد",
+  baseband: "الباس باند",
+  carrier: "المشغل",
+  securityPatch: "تحديث الأمان",
+  uid: "رقم المستخدم",
+  hwid: "رقم الجهاز",
+  operationDetails: "تفاصيل العملية",
+  close: "إغلاق",
+  addCredit: "إضافة رصيد",
+  selectUser: "اختر المستخدم",
+  current: "الحالي",
+  creditAmount: "قيمة الرصيد",
+  creditExplanation: "أدخل كمية الرصيد لإضافتها إلى حساب المستخدم",
+  adding: "جاري الإضافة...",
+  add: "إضافة",
+  error: "خطأ",
+  addUserError: "خطأ في إضافة المستخدم",
+  addNewUser: "إضافة مستخدم جديد",
+  enterNewUserData: "أدخل بيانات المستخدم الجديد",
+  password: "كلمة المرور",
+  selectUserType: "اختر نوع المستخدم",
+  subscriptionPeriod: "فترة الاشتراك",
+  selectSubscriptionPeriod: "اختر فترة الاشتراك",
+  threeMonths: "3 أشهر",
+  sixMonths: "6 أشهر",
+  nineMonths: "9 أشهر",
+  twelveMonths: "12 شهر",
+  phone: "الهاتف",
+  selectCountry: "اختر الدولة",
+  addUser: "إضافة مستخدم",
+  updateUserError: "خطأ في تحديث المستخدم",
+  editUserDescription: "تحديث بيانات المستخدم",
+  renewUser: "تجديد حساب المستخدم",
+  chooseRenewalMonths: "اختر عدد الأشهر لتجديد الحساب",
+  numberOfMonths: "عدد الأشهر",
+  selectMonths: "اختر عدد الأشهر",
+  renew: "تجديد",
+  userDetails: "تفاصيل المستخدم",
+  completeUserInfo: "معلومات المستخدم الكاملة",
+  activation: "التفعيل",
+  startDate: "تاريخ البدء",
+  expiryDate: "تاريخ الانتهاء"
 };
 
 interface LanguageContextProps {
