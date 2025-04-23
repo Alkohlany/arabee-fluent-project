@@ -322,11 +322,11 @@ export default function UsersManager() {
               <RefreshCw className="h-5 w-5 mr-2" />
               {t("refresh")}
             </Button>
-            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center">
+            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center" variant="outline">
               <PlusCircle className="h-5 w-5 mr-2" />
               {t("addCredit")}
             </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center">
+            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center" variant="outline">
               <UserPlus className="h-5 w-5 mr-2" />
               {t("addUser")}
             </Button>
