@@ -1,4 +1,14 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSharedData, useLanguage } from "@/hooks/useSharedData";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Card,
   CardContent,
@@ -6,260 +16,447 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { MoreVertical, Edit, Trash2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useNavigate } from "react-router-dom";
-import { useSharedData, useLanguage } from "@/hooks/useSharedData";
+import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { format } from 'date-fns';
-
-interface User {
-  id: string;
-  Name: string;
-  Activate: string;
-  Block: string;
-  Country: string;
-  Credits: string;
-  Email: string;
-  Email_Type: string;
-  Expiry_Time: string;
-  Hwid: string;
-  Password: string;
-  Phone: string;
-  Start_Date: string;
-  UID: string;
-  User_Type: string;
-  [key: string]: string;
-}
+import { Search, Edit, Trash, UserPlus, ArrowLeft, Eye, RefreshCw, PlusCircle } from "lucide-react";
+import { ViewUserDialog } from "@/components/users/ViewUserDialog";
+import { EditUserDialog } from "@/components/users/EditUserDialog";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
+import { RenewUserDialog } from "@/components/users/RenewUserDialog";
+import { AddCreditsDialog } from "@/components/users/AddCreditsDialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function UsersManager() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [filterStatus, setFilterStatus] = useState("all");
-  const { users, isLoading, refreshData } = useSharedData();
   const navigate = useNavigate();
+  const { users, isLoading, addCreditToUser, refreshData } = useSharedData();
   const { t, isRTL } = useLanguage();
+  const queryClient = useQueryClient();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Dialog states
+  const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isRenewDialogOpen, setIsRenewDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddCreditsDialogOpen, setIsAddCreditsDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (users) {
-      let filtered = [...users];
-
-      if (filterStatus === "active") {
-        filtered = filtered.filter((user) => user.Activate === "true");
-      } else if (filterStatus === "inactive") {
-        filtered = filtered.filter((user) => user.Activate === "false");
-      }
-
-      if (searchQuery) {
-        const lowerSearchQuery = searchQuery.toLowerCase();
-        filtered = filtered.filter((user) =>
-          user.Name.toLowerCase().includes(lowerSearchQuery) ||
-          user.Email.toLowerCase().includes(lowerSearchQuery) ||
-          user.Phone.toLowerCase().includes(lowerSearchQuery)
-        );
-      }
-
-      setFilteredUsers(filtered);
-    }
-  }, [users, searchQuery, filterStatus]);
-
-  const handleEdit = (userId: string) => {
-    navigate(`/user-edit/${userId}`);
-  };
-
-  const handleDelete = async (userId: string) => {
     const token = localStorage.getItem("userToken");
     if (!token) {
-      toast(t("noAuth"), {
-        description: t("noAuthDescription")
-      });
+      navigate("/login");
       return;
     }
-
+  }, [navigate]);
+  
+  const handleDeleteUser = async (userId: string) => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    
     try {
-      const response = await fetch(
-        `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${userId}.json?auth=${token}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      if (response.ok) {
-        toast(t("userDeleted"), {
-          description: t("userDeletedSuccess")
-        });
-        refreshData(); // Refresh user data
-      } else {
-        toast(t("userDeletedFailed"), {
-          description: t("userDeletedFailedDescription")
-        });
+      const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${userId}.json?auth=${token}`;
+      const response = await fetch(url, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`فشل حذف المستخدم: ${response.status}`);
       }
+      
+      toast(t("deleteSuccess"), {
+        description: t("deleteUserSuccess")
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
     } catch (error) {
-      console.error("Error deleting user:", error);
-      toast(t("userDeletedFailed"), {
-        description: t("userDeletedFailedDescription")
+      console.error("فشل في حذف المستخدم:", error);
+      toast("خطأ", {
+        description: "فشل في حذف المستخدم"
+      });
+      handleLogout();
+    }
+  };
+  
+  const handleViewDetails = (user: any) => {
+    setSelectedUser(user);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
+  };
+  
+  const handleAddUser = () => {
+    setIsAddDialogOpen(true);
+  };
+  
+  const handleRenewUser = (user: any) => {
+    setSelectedUser(user);
+    setIsRenewDialogOpen(true);
+  };
+
+  const handleAddCredits = () => {
+    setIsAddCreditsDialogOpen(true);
+  };
+  
+  const handleSaveEditedUser = async (updatedUser: any) => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${updatedUser.id}.json?auth=${token}`;
+      const response = await fetch(url, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          Name: updatedUser.Name,
+          Email: updatedUser.Email,
+          Password: updatedUser.Password,
+          Phone: updatedUser.Phone,
+          Country: updatedUser.Country,
+          Activate: updatedUser.Activate,
+          Block: updatedUser.Block,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update user");
+      }
+
+      toast(t("updateSuccess"), {
+        description: t("updateUserSuccess")
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast("خطأ", {
+        description: "فشل في تحديث بيانات المستخدم"
+      });
+      handleLogout();
+    }
+  };
+  
+  const handleAddNewUser = async (newUser: any) => {
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      // First create Firebase Auth user
+      const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyAoZXmXFEvXAujyaI1ahFolBf06in5R4P4`;
+      const authResponse = await fetch(authUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: newUser.Email,
+          password: newUser.Password,
+          returnSecureToken: true
+        })
+      });
+      
+      if (!authResponse.ok) {
+        const errorData = await authResponse.json();
+        throw new Error(handleAuthError(errorData.error?.message || "فشل في إنشاء المستخدم"));
+      }
+      
+      const authData = await authResponse.json();
+      const localId = authData.localId;
+      
+      // Now save user data to Firebase Realtime Database
+      newUser.UID = localId;
+      newUser.Hwid = "Null"; // As specified in the code
+
+      const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${localId}.json?auth=${token}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: JSON.stringify(newUser),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add user data");
+      }
+      
+      toast(t("addSuccess"), {
+        description: t("addUserSuccess")
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+    } catch (error) {
+      console.error("Error adding user:", error);
+      toast("خطأ", {
+        description: error instanceof Error ? error.message : "فشل في إضافة المستخدم"
+      });
+    }
+  };
+  
+  const handleRenewConfirm = async (months: string) => {
+    if (!selectedUser) return;
+    
+    const token = localStorage.getItem("userToken");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    
+    try {
+      // Calculate new expiry date
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + parseInt(months));
+      const newExpiryDate = expiryDate.toISOString().split('T')[0];
+      
+      const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${selectedUser.id}.json?auth=${token}`;
+      const response = await fetch(url, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          User_Type: "Monthly License",
+          Expiry_Time: newExpiryDate
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to renew user");
+      }
+
+      toast(t("renewSuccess"), {
+        description: t("renewUserSuccess")
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+    } catch (error) {
+      console.error("Error renewing user:", error);
+      toast("خطأ", {
+        description: "فشل في تجديد حساب المستخدم"
+      });
+      handleLogout();
+    }
+  };
+
+  const handleAddCreditsConfirm = async (userId: string, creditsToAdd: number) => {
+    try {
+      // Use the shared addCreditToUser function with +0 suffix
+      await addCreditToUser(userId, creditsToAdd);
+      
+      toast(t("addCreditSuccess"), {
+        description: t("addCreditDescription")
+      });
+    } catch (error) {
+      console.error("Error adding credits:", error);
+      toast("خطأ", {
+        description: "فشل في إضافة الرصيد"
       });
     }
   };
 
-  const handleFilterActive = () => {
-    setFilterStatus("active");
+  const handleRefresh = () => {
+    refreshData();
   };
 
-  const handleFilterInactive = () => {
-    setFilterStatus("inactive");
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userId");
+    navigate("/login");
   };
-
-  const handleFilterAll = () => {
-    setFilterStatus("all");
+  
+  const handleAuthError = (errorCode: string): string => {
+    if (errorCode.includes("EMAIL_NOT_FOUND")) {
+      return t("emailNotFound") || "The email address is not registered!";
+    } else if (errorCode.includes("INVALID_EMAIL")) {
+      return t("invalidEmail") || "The email format is invalid! (@ is missing or incorrect format)";
+    } else if (errorCode.includes("INVALID_LOGIN_CREDENTIALS")) {
+      return t("invalidCredentials") || "Invalid Login Credentials";
+    } else if (errorCode.includes("INVALID_PASSWORD")) {
+      return t("invalidPassword") || "The password is incorrect!";
+    } else if (errorCode.includes("USER_DISABLED")) {
+      return t("accountDisabled") || "This account has been disabled by the administrator!";
+    } else if (errorCode.includes("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+      return t("tooManyAttempts") || "Too many failed attempts, please try again later!";
+    } else if (errorCode.includes("API_KEY_INVALID")) {
+      return t("invalidApiKey") || "The API key is invalid!";
+    } else if (errorCode.includes("EMAIL_EXISTS")) {
+      return t("emailExists") || "البريد الإلكتروني مستخدم بالفعل";
+    } else {
+      return t("serverError") || "Error In Server Error Code: 401";
+    }
   };
-
+  
+  const filteredUsers = users.filter(user => {
+    if (user.Email_Type !== "User") return false;
+    
+    return (
+      user.Email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.User_Type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.Country?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+  
   return (
-    <section dir={isRTL ? "rtl" : "ltr"} className="min-h-screen py-12 px-4 sm:px-8 bg-gradient-to-tr from-gray-100 to-white">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-2 animate-fade-in">
-              {t("users")}
-            </h1>
-            <p className="text-gray-600 md:text-lg animate-fade-in">{t("manageUsers")}</p>
-          </div>
-          <div className="mt-4 md:mt-0">
-            <Button onClick={() => navigate('/signup')}>{t("createUser")}</Button>
-          </div>
-        </header>
-
-        <Card className="shadow-lg border-2 border-gray-50">
-          <CardHeader>
-            <CardTitle>{t("usersList")}</CardTitle>
-            <CardDescription>{t("filterSearchManage")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-              <div className="col-span-1 md:col-span-2">
-                <Label htmlFor="search">{t("searchUsers")}</Label>
-                <Input
-                  type="search"
-                  id="search"
-                  placeholder={t("searchByNameEmailPhone")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="col-span-1">
-                <Label htmlFor="filter">{t("filterByStatus")}</Label>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                      {filterStatus === "all" ? t("allUsers") : filterStatus === "active" ? t("activeUsers") : t("inactiveUsers")}
-                      <MoreVertical className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>{t("filter")}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleFilterActive}>
-                      {t("activeUsers")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleFilterInactive}>
-                      {t("inactiveUsers")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleFilterAll}>
-                      {t("allUsers")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-gray-100">
+      <Card className="max-w-7xl mx-auto shadow mt-8">
+        <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border-b">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <CardTitle className="text-2xl font-extrabold text-gray-900">{t("users")}</CardTitle>
+              <CardDescription>{t("usersDescription")}</CardDescription>
             </div>
-            <div className="mt-6 overflow-x-auto">
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleRefresh} className="flex items-center" variant="outline">
+              <RefreshCw className="h-5 w-5 mr-2" />
+              {t("refresh")}
+            </Button>
+            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center">
+              <PlusCircle className="h-5 w-5 mr-2" />
+              {t("addCredit")}
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center">
+              <UserPlus className="h-5 w-5 mr-2" />
+              {t("addUser")}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-between items-center mb-4">
+            <div className="relative flex-1 max-w-xs">
+              <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-1/2 transform -translate-y-1/2 text-gray-400`} />
+              <Input
+                placeholder={t("searchUsers")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={isRTL ? "pl-3 pr-10 w-full" : "pl-10 pr-3 w-full"}
+              />
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="text-center py-8">{t("loadingData")}</div>
+          ) : filteredUsers.length > 0 ? (
+            <div className="overflow-x-auto">
               <Table>
-                <TableCaption>{t("usersOverview")}</TableCaption>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("name")}</TableHead>
                     <TableHead>{t("email")}</TableHead>
-                    <TableHead>{t("phone")}</TableHead>
                     <TableHead>{t("userType")}</TableHead>
-                    <TableHead>{t("credits")}</TableHead>
+                    <TableHead>{t("status")}</TableHead>
                     <TableHead>{t("country")}</TableHead>
-                    <TableHead>{t("expiryTime")}</TableHead>
-                    <TableHead className="text-right">{t("actions")}</TableHead>
+                    <TableHead>{t("credit")}</TableHead>
+                    <TableHead>{t("startDate")}</TableHead>
+                    <TableHead>{t("expiryDate")}</TableHead>
+                    <TableHead className={isRTL ? "text-right" : "text-left"}>{t("actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        {t("loadingUsers")}
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.Email}</TableCell>
+                      <TableCell>{user.User_Type}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs ${user.Block === "Not Blocked" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          {user.Block}
+                        </span>
+                      </TableCell>
+                      <TableCell>{user.Country}</TableCell>
+                      <TableCell>{user.Credits}</TableCell>
+                      <TableCell>{user.Start_Date}</TableCell>
+                      <TableCell>{user.Expiry_Time}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsViewDialogOpen(true)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {t("viewDetails")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsEditDialogOpen(true)}
+                          >
+                            <Edit className="h-4 w-4 mr-1" />
+                            {t("edit")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedUser(user) || setIsRenewDialogOpen(true)}
+                          >
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            {t("renew")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash className="h-4 w-4 mr-1" />
+                            {t("delete")}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ) : filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-4">
-                        {t("noUsersFound")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.Name}</TableCell>
-                        <TableCell>{user.Email}</TableCell>
-                        <TableCell>{user.Phone}</TableCell>
-                        <TableCell>{user.User_Type}</TableCell>
-                        <TableCell>{user.Credits}</TableCell>
-                        <TableCell>{user.Country}</TableCell>
-                        <TableCell>
-                          {user.Expiry_Time ? format(new Date(user.Expiry_Time), 'yyyy-MM-dd') : t('noExpiry')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">{t("openMenu")}</span>
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>{t("actions")}</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleEdit(user.id)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>{t("edit")}</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDelete(user.id)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>{t("delete")}</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={8}>{t("totalUsers")}: {users?.length || 0}</TableCell>
-                  </TableRow>
-                </TableFooter>
               </Table>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+          ) : (
+            <div className="text-center py-8">
+              {t("noUsers")}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <ViewUserDialog 
+        isOpen={isViewDialogOpen} 
+        onClose={() => setIsViewDialogOpen(false)} 
+        user={selectedUser} 
+      />
+      
+      <EditUserDialog 
+        isOpen={isEditDialogOpen} 
+        onClose={() => setIsEditDialogOpen(false)} 
+        user={selectedUser}
+        onSave={handleSaveEditedUser}
+      />
+      
+      <RenewUserDialog
+        isOpen={isRenewDialogOpen}
+        onClose={() => setIsRenewDialogOpen(false)}
+        onConfirm={handleRenewConfirm}
+        userType={selectedUser?.User_Type || ""}
+      />
+      
+      <AddUserDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSave={handleAddNewUser}
+      />
+
+      <AddCreditsDialog
+        isOpen={isAddCreditsDialogOpen}
+        onClose={() => setIsAddCreditsDialogOpen(false)}
+        users={users.filter(user => user.Email_Type === "User")}
+        onAddCredits={handleAddCreditsConfirm}
+      />
+    </div>
   );
 }

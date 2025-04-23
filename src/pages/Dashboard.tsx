@@ -1,12 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, PieChart, Bar, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, CreditCard, CalendarDays, BarChart as BarChartIcon } from "lucide-react";
 import { useSharedData, useLanguage } from "@/hooks/useSharedData";
-import OperationsUsedChart from "@/components/dashboard/OperationsUsedChart";
-import MonthlyOperationsChart from "@/components/dashboard/MonthlyOperationsChart";
-import GeoMap from "@/components/dashboard/GeoMap";
-import { format, parse } from "date-fns";
 
 export default function Dashboard() {
   const { users, operations, isLoading } = useSharedData();
@@ -32,92 +30,47 @@ export default function Dashboard() {
   }, [users, operations]);
 
   const getMonthlyOperationsData = () => {
-    if (!operations || operations.length === 0) return [];
-
-    // Create an object to store operation counts by month
-    const monthCounts = {};
-    
+    const monthCounts = new Array(12).fill(0);
     operations.forEach(op => {
       if (op.Time) {
-        try {
-          // Extract date from the time string
-          const dateStr = op.Time.split(' ')[0];
-          if (!dateStr) return;
-          
-          // Convert to a standardized date format
-          const dateParts = dateStr.split('-');
-          if (dateParts.length < 2) return;
-          
-          // Get month and year
-          const month = parseInt(dateParts[1], 10);
-          const year = parseInt(dateParts[0], 10);
-          
-          if (isNaN(month) || month < 1 || month > 12) return;
-          
-          // Use a consistent key format for the month
-          const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
-          
-          // Increment the count for this month
-          monthCounts[monthKey] = (monthCounts[monthKey] || 0) + 1;
-        } catch (e) {
-          console.error("Error parsing date:", e);
+        const dateParts = op.Time.split(' ')[0].split('-');
+        if (dateParts.length >= 2) {
+          const month = parseInt(dateParts[1]) - 1;
+          if (month >= 0 && month < 12) {
+            monthCounts[month]++;
+          }
         }
       }
     });
-    
-    // Convert the counts object to an array sorted by date
-    return Object.entries(monthCounts)
-      .map(([key, count]) => {
-        const [year, monthStr] = key.split('-');
-        const month = parseInt(monthStr, 10);
-        
-        // Get month name in the current language
-        const date = new Date(parseInt(year, 10), month - 1);
-        const monthName = format(date, 'MMMM yyyy');
-        
-        return {
-          name: monthName,
-          operations: count as number,
-          sortKey: key // Keep the original key for sorting
-        };
-      })
-      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
-      .map(({ name, operations }) => ({ name, operations }));
+    const monthNames = [
+      t("jan"), t("feb"), t("mar"), t("apr"), t("may"), t("jun"),
+      t("jul"), t("aug"), t("sep"), t("oct"), t("nov"), t("dec")
+    ];
+    return monthNames.map((name, index) => ({
+      name,
+      operations: monthCounts[index]
+    }));
   };
 
   const getOperationTypesData = () => {
-    if (!operations || operations.length === 0) return [];
-
     const typeCounts: Record<string, number> = {};
     operations.forEach(op => {
       const type = op.OprationTypes || t('unknown');
       typeCounts[type] = (typeCounts[type] || 0) + 1;
     });
-    
-    return Object.entries(typeCounts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value); // Sort by count in descending order
-  };
-  
-  const getUsersCountryData = () => {
-    if (!users || users.length === 0) return [];
-    
-    const countryCounts: Record<string, number> = {};
-    users.forEach(user => {
-      if (user.Country) {
-        const country = user.Country;
-        countryCounts[country] = (countryCounts[country] || 0) + 1;
-      }
-    });
-    
-    return Object.entries(countryCounts)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value); // Sort by count in descending order
+    return Object.entries(typeCounts).map(([name, value]) => ({
+      name,
+      value
+    }));
   };
 
-  const monthlyOperationsData = getMonthlyOperationsData();
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
+  const monthlyData = getMonthlyOperationsData();
   const operationTypesData = getOperationTypesData();
-  const usersCountryData = getUsersCountryData();
+  const licenseComparisonData = [
+    { name: t('monthlyLicense'), value: stats.monthlyUsers },
+    { name: t('creditsLicense'), value: stats.creditUsers }
+  ];
 
   return (
     <section dir={isRTL ? "rtl" : "ltr"} className="min-h-screen py-12 px-4 sm:px-8 bg-gradient-to-tr from-gray-100 to-white">
@@ -187,16 +140,99 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <OperationsUsedChart data={operationTypesData} isLoading={isLoading} />
-            <MonthlyOperationsChart data={monthlyOperationsData} isLoading={isLoading} />
-          </div>
-          
-          <div className="grid grid-cols-1 gap-6 mb-6">
-            <GeoMap data={usersCountryData} isLoading={isLoading} />
-          </div>
-          </>
+          <Tabs defaultValue="monthlyOps" className="w-full mt-8">
+            <TabsList className="w-full rounded-lg shadow mb-4 bg-white flex">
+              <TabsTrigger value="monthlyOps">{t("monthlyOperations") ?? "Monthly Operations"}</TabsTrigger>
+              <TabsTrigger value="opTypes">{t("operationTypes") ?? "Operation Types"}</TabsTrigger>
+              <TabsTrigger value="licenseTypes">{t("licenseTypes") ?? "License Types"}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="monthlyOps">
+              <Card className="shadow border bg-white mb-6">
+                <CardHeader>
+                  <CardTitle>{t("monthlyOperations") ?? "Monthly Operations"}</CardTitle>
+                  <CardDescription>{t("monthlyOperationsDesc") ?? "Monthly registered operations statistics"}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-96">
+                  <ChartContainer config={{ operations: { label: t("operations") } }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={monthlyData}>
+                        <CartesianGrid strokeDasharray="2 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="operations" />} />
+                        <Legend />
+                        <Bar dataKey="operations" fill="#2563EB" name={t("operations")} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="opTypes">
+              <Card className="shadow border bg-white mb-6">
+                <CardHeader>
+                  <CardTitle>{t("operationTypes") ?? "Operation Types"}</CardTitle>
+                  <CardDescription>{t("operationTypesDesc") ?? "Types breakdown"}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-96">
+                  <ChartContainer config={{ value: { label: t("count") } }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={operationTypesData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry: any) => `${entry.name}: ${entry.value}`}
+                          outerRadius={140}
+                          fill="#2563EB"
+                          dataKey="value"
+                        >
+                          {operationTypesData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="value" />} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="licenseTypes">
+              <Card className="shadow border bg-white mb-6">
+                <CardHeader>
+                  <CardTitle>{t("licenseTypes") ?? "License Types"}</CardTitle>
+                  <CardDescription>{t("licenseTypesDesc") ?? "License type user count comparison"}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-96">
+                  <ChartContainer config={{ value: { label: t("count") } }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={licenseComparisonData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry: any) => `${entry.name}: ${entry.value}`}
+                          outerRadius={140}
+                          fill="#22D3EE"
+                          dataKey="value"
+                        >
+                          <Cell fill="#2563EB" />
+                          <Cell fill="#A3E635" />
+                        </Pie>
+                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="value" />} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </>
         )}
       </div>
     </section>
