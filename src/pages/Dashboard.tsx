@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, PieChart, Bar, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Users, CreditCard, CalendarDays, BarChart as BarChartIcon } from "lucide-react";
-import { useSharedData, useLanguage } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/useLanguage";
+import { useSharedData } from "@/hooks/useSharedData";
 import GeoMap from "@/components/dashboard/GeoMap";
 import { format } from "date-fns";
 

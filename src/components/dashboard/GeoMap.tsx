@@ -14,7 +14,7 @@ const GeoMap: React.FC<Props> = ({ users }) => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || !users || users.length === 0) return;
 
     // Initialize map with temporary token - in production, this should be managed through environment variables
     mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHRpOWF2NWowMWZ5MmtvOWFudWJjMXd3In0.Wm7JxKBic-NIrQcS3K7lPw';

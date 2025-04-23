@@ -107,7 +107,7 @@ export const formatTimeString = (timeStr: string): string => {
   }
 };
 
-// Refund operation function - updated with the requested code logic
+// Refund operation function
 export const refundOperation = async (operation: Operation): Promise<boolean> => {
   if (!operation) return false;
   
@@ -207,7 +207,7 @@ export const useSharedData = () => {
     queryClient.invalidateQueries({ queryKey: ['operations'] });
   };
 
-  // Add credit to user with the "0." format (corrected format)
+  // Add credit to user with the "0." format
   const addCreditToUser = async (userId: string, amount: number): Promise<boolean> => {
     if (!token) return false;
     
@@ -250,5 +250,5 @@ export const useSharedData = () => {
   };
 };
 
-// Export the language hook and translation functions
-export { useLanguage } from './useLanguage';
+// Remove redundant re-export to avoid circular dependencies
+// export { useLanguage } from './useLanguage';
