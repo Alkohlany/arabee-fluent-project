@@ -95,7 +95,6 @@ export default function Dashboard() {
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg font-semibold">{t("totalUsers")}</CardTitle>
-                  <CardDescription className="text-xs">{t("users")}</CardDescription>
                 </div>
                 <Users className="h-7 w-7 text-blue-500" />
               </CardHeader>
@@ -107,7 +106,6 @@ export default function Dashboard() {
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg font-semibold">{t("monthlyLicense")}</CardTitle>
-                  <CardDescription className="text-xs">{t("monthlyLicense")}</CardDescription>
                 </div>
                 <CalendarDays className="h-7 w-7 text-green-500" />
               </CardHeader>
@@ -119,7 +117,6 @@ export default function Dashboard() {
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg font-semibold">{t("creditsLicense")}</CardTitle>
-                  <CardDescription className="text-xs">{t("creditsLicense")}</CardDescription>
                 </div>
                 <CreditCard className="h-7 w-7 text-yellow-500" />
               </CardHeader>
@@ -131,7 +128,6 @@ export default function Dashboard() {
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                   <CardTitle className="text-lg font-semibold">{t("totalOperations")}</CardTitle>
-                  <CardDescription className="text-xs">{t("operationID")}</CardDescription>
                 </div>
                 <BarChartIcon className="h-7 w-7 text-pink-500" />
               </CardHeader>
@@ -140,98 +136,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
-          <Tabs defaultValue="monthlyOps" className="w-full mt-8">
-            <TabsList className="w-full rounded-lg shadow mb-4 bg-white flex">
-              <TabsTrigger value="monthlyOps">{t("monthlyOperations") ?? "Monthly Operations"}</TabsTrigger>
-              <TabsTrigger value="opTypes">{t("operationTypes") ?? "Operation Types"}</TabsTrigger>
-              <TabsTrigger value="licenseTypes">{t("licenseTypes") ?? "License Types"}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="monthlyOps">
-              <Card className="shadow border bg-white mb-6">
-                <CardHeader>
-                  <CardTitle>{t("monthlyOperations") ?? "Monthly Operations"}</CardTitle>
-                  <CardDescription>{t("monthlyOperationsDesc") ?? "Monthly registered operations statistics"}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-96">
-                  <ChartContainer config={{ operations: { label: t("operations") } }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="2 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="operations" />} />
-                        <Legend />
-                        <Bar dataKey="operations" fill="#2563EB" name={t("operations")} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="opTypes">
-              <Card className="shadow border bg-white mb-6">
-                <CardHeader>
-                  <CardTitle>{t("operationTypes") ?? "Operation Types"}</CardTitle>
-                  <CardDescription>{t("operationTypesDesc") ?? "Types breakdown"}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-96">
-                  <ChartContainer config={{ value: { label: t("count") } }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={operationTypesData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) => `${entry.name}: ${entry.value}`}
-                          outerRadius={140}
-                          fill="#2563EB"
-                          dataKey="value"
-                        >
-                          {operationTypesData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="value" />} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="licenseTypes">
-              <Card className="shadow border bg-white mb-6">
-                <CardHeader>
-                  <CardTitle>{t("licenseTypes") ?? "License Types"}</CardTitle>
-                  <CardDescription>{t("licenseTypesDesc") ?? "License type user count comparison"}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-96">
-                  <ChartContainer config={{ value: { label: t("count") } }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={licenseComparisonData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) => `${entry.name}: ${entry.value}`}
-                          outerRadius={140}
-                          fill="#22D3EE"
-                          dataKey="value"
-                        >
-                          <Cell fill="#2563EB" />
-                          <Cell fill="#A3E635" />
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent labelKey="name" nameKey="value" />} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
         </>
         )}
       </div>
