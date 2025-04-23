@@ -171,8 +171,8 @@ export const translations: Translations = {
     ar: "عرض وإدارة العمليات المسجلة في النظام"
   },
   totalOperations: {
-    en: "Total Operations: {0} | Showing {1} - {2}",
-    ar: "إجمالي العمليات: {0} | عرض {1} - {2}"
+    en: "Total Operations",
+    ar: "إجمالي العمليات"
   },
   refundSuccess: {
     en: "Refund completed",
