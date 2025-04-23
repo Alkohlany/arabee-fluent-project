@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -53,6 +52,17 @@ export const OperationDetailsDialog = ({ operation, isOpen, onClose }: Operation
     { label: t("uid"), value: operation.UID },
     { label: t("hwid"), value: operation.Hwid },
   ];
+  
+  const formatRTFContent = (rtfContent: string) => {
+    let formattedContent = rtfContent
+      .replace(/success/gi, '<span class="text-green-600 font-bold">$&</span>')
+      .replace(/error|failed|failure/gi, '<span class="text-red-600 font-bold">$&</span>')
+      .replace(/warning/gi, '<span class="text-yellow-600 font-bold">$&</span>');
+    
+    formattedContent = formattedContent.replace(/\n/g, '<br />');
+    
+    return formattedContent;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -72,10 +82,11 @@ export const OperationDetailsDialog = ({ operation, isOpen, onClose }: Operation
             
             {operation.LogOpration && (
               <div className="col-span-1 md:col-span-2 border rounded-md p-3">
-                <div className="text-sm text-muted-foreground">Log</div>
-                <pre className="mt-2 whitespace-pre-wrap text-sm bg-muted p-2 rounded">
-                  {operation.LogOpration}
-                </pre>
+                <div className="text-sm text-muted-foreground">{t("log")}</div>
+                <div 
+                  className="mt-2 whitespace-pre-wrap text-sm bg-muted p-2 rounded overflow-auto"
+                  dangerouslySetInnerHTML={{ __html: formatRTFContent(operation.LogOpration) }}
+                />
               </div>
             )}
           </div>
