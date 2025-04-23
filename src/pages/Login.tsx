@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { AUTH_ENDPOINTS } from "@/config/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/useLanguage";
 
 export default function Login() {
@@ -20,26 +20,19 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(AUTH_ENDPOINTS.signIn, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          returnSecureToken: true,
-        }),
+      // استخدام Supabase للمصادقة
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || t("loginError") || "Login error");
+      if (error) {
+        throw new Error(error.message || t("loginError") || "Login error");
       }
 
-      localStorage.setItem("userToken", data.idToken);
-      localStorage.setItem("userId", data.localId);
+      // تخزين بيانات المستخدم في التخزين المحلي
+      localStorage.setItem("userToken", data.session.access_token);
+      localStorage.setItem("userId", data.user.id);
 
       toast({
         title: t("loginSuccess") || "Login successful",

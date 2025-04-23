@@ -1,90 +1,136 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useLanguage } from "./useLanguage";
 import { toast } from "@/components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
   id: string;
-  Name: string;
-  Activate: string;
-  Block: string;
-  Country: string;
-  Credits: string;
-  Email: string;
-  Email_Type: string;
-  Expiry_Time: string;
-  Hwid: string;
-  Password: string;
-  Phone: string;
-  Start_Date: string;
-  UID: string;
-  User_Type: string;
+  name: string;
+  activate: string;
+  block: string;
+  country: string;
+  credits: string;
+  email: string;
+  email_type: string;
+  expiry_time: string;
+  hwid: string;
+  password: string;
+  phone: string;
+  start_date: string;
+  uid: string;
+  user_type: string;
   [key: string]: string; // Add index signature to resolve type issues
 }
 
 interface Operation {
-  OprationID: string;
-  OprationTypes: string;
-  Phone_SN: string;
-  Brand: string;
-  Model: string;
-  Imei: string;
-  UserName: string;
-  Credit: string;
-  Time: string;
-  Status: string;
-  Android: string;
-  Baseband: string;
-  Carrier: string;
-  Security_Patch: string;
-  UID: string;
-  Hwid: string;
-  LogOpration: string;
+  operation_id: string;
+  operation_type: string;
+  phone_sn: string;
+  brand: string;
+  model: string;
+  imei: string;
+  username: string;
+  credit: string;
+  time: string;
+  status: string;
+  android: string;
+  baseband: string;
+  carrier: string;
+  security_patch: string;
+  uid: string;
+  hwid: string;
+  log_operation: string;
 }
 
 // Variable to track if the success toast has been shown
 let hasShownSuccessToast = false;
 
-const fetchUsers = async (token: string | null): Promise<User[]> => {
+const fetchUsers = async (): Promise<User[]> => {
+  const token = localStorage.getItem("userToken");
   if (!token) throw new Error("No authentication token");
   
-  const response = await fetch(
-    `https://pegasus-tool-database-default-rtdb.firebaseio.com/users.json?auth=${token}`
-  );
+  // استخدم الرمز المميز للمصادقة
+  supabase.auth.setSession({
+    access_token: token,
+    refresh_token: '',
+  });
   
-  if (!response.ok) throw new Error("Failed to fetch users");
+  const { data, error } = await supabase
+    .from('users')
+    .select('*');
   
-  const data = await response.json();
-  return data ? Object.entries(data).map(([id, value]: [string, any]) => ({
-    id,
-    ...value
-  })) : [];
+  if (error) throw new Error("Failed to fetch users");
+  
+  // تنسيق البيانات لتناسب الواجهة الحالية
+  return data.map(user => ({
+    id: user.id,
+    name: user.name || "",
+    activate: user.activate || "Active",
+    block: user.block || "Not Blocked",
+    country: user.country || "",
+    credits: user.credits || "0.0",
+    email: user.email || "",
+    email_type: user.email_type || "User",
+    expiry_time: user.expiry_time || "",
+    hwid: user.hwid || "Null",
+    password: user.password || "",
+    phone: user.phone || "",
+    start_date: user.start_date || "",
+    uid: user.uid || "",
+    user_type: user.user_type || "Monthly License"
+  }));
 };
 
 const fetchOperations = async (): Promise<Operation[]> => {
-  const response = await fetch(
-    "https://pegasus-tool-api-operations-default-rtdb.firebaseio.com/Operations.json?auth=wDgquXfCPyqdYqFYC1Vc8kQDjVMpEx0xEvfkqdAC"
-  );
+  const token = localStorage.getItem("userToken");
+  if (!token) throw new Error("No authentication token");
   
-  if (!response.ok) throw new Error("Failed to fetch operations");
+  // استخدم الرمز المميز للمصادقة
+  supabase.auth.setSession({
+    access_token: token,
+    refresh_token: '',
+  });
   
-  const data = await response.json();
-  const operations = data ? Object.entries(data).map(([id, value]: [string, any]) => ({
-    OprationID: id,
-    ...value
-  })) : [];
+  const { data, error } = await supabase
+    .from('operations')
+    .select('*');
+  
+  if (error) throw new Error("Failed to fetch operations");
+  
+  // تنسيق البيانات لتناسب الواجهة الحالية
+  const operations = data.map(op => ({
+    operation_id: op.id,
+    operation_type: op.operation_type || "",
+    phone_sn: op.phone_sn || "",
+    brand: op.brand || "",
+    model: op.model || "",
+    imei: op.imei || "",
+    username: op.username || "",
+    credit: op.credit || "0.0",
+    time: op.time || new Date().toISOString(),
+    status: op.status || "Pending",
+    android: op.android || "",
+    baseband: op.baseband || "",
+    carrier: op.carrier || "",
+    security_patch: op.security_patch || "",
+    uid: op.uid || "",
+    hwid: op.hwid || "",
+    log_operation: op.log_operation || ""
+  }));
 
   // Format credit values to "0.0" if they're "0.00"
   operations.forEach(op => {
-    if (op.Credit === "0.00") {
-      op.Credit = "0.0";
+    if (op.credit === "0.00") {
+      op.credit = "0.0";
     }
   });
 
   // Sort operations by time in descending order
   return operations.sort((a, b) => {
-    const dateA = new Date(formatTimeString(a.Time));
-    const dateB = new Date(formatTimeString(b.Time));
+    const dateA = new Date(formatTimeString(a.time));
+    const dateB = new Date(formatTimeString(b.time));
     return dateB.getTime() - dateA.getTime();
   });
 };
@@ -107,62 +153,61 @@ export const formatTimeString = (timeStr: string): string => {
   }
 };
 
-// Refund operation function - updated with the requested code logic
-export const refundOperation = async (operation: Operation): Promise<boolean> => {
+// Refund operation function - adapted for Supabase
+export const refundOperation = async (operation: any): Promise<boolean> => {
   if (!operation) return false;
   
   const token = localStorage.getItem("userToken");
   if (!token) throw new Error("No authentication token");
   
   try {
+    // Set auth token
+    supabase.auth.setSession({
+      access_token: token,
+      refresh_token: '',
+    });
+    
     // The refund amount from the operation
-    const refundAmountStr = operation.Credit;
+    const refundAmountStr = operation.credit;
     const refundAmount = parseFloat(refundAmountStr) || 0;
     
     // Get current credits for the user
-    const creditUrl = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${operation.UID}/Credits.json?auth=${token}`;
-    const creditResponse = await fetch(creditUrl);
-    if (!creditResponse.ok) throw new Error("Failed to get user credits");
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('credits')
+      .eq('id', operation.uid)
+      .single();
     
-    const currentCreditStr = await creditResponse.text();
+    if (userError) throw new Error("Failed to get user credits");
+    
+    // Calculate new credits
     let currentCredit = 0;
     try {
-      // Remove quotes if they exist in the response
-      currentCredit = parseFloat(currentCreditStr.replace(/"/g, "")) || 0;
+      currentCredit = parseFloat(userData.credits.replace(/"/g, "")) || 0;
     } catch (e) {
       console.error("Error parsing credit:", e);
     }
     
-    // Calculate new credits
     const newCredit = currentCredit + refundAmount;
     
-    // Update user's credit with .0 as required
-    const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${operation.UID}.json?auth=${token}`;
-    const updateData = JSON.stringify({
-      Credits: newCredit.toString() + ".0"
-    });
+    // Update user's credit
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ credits: newCredit.toString() + ".0" })
+      .eq('id', operation.uid);
     
-    const response = await fetch(url, {
-      method: 'PATCH',
-      body: updateData,
-    });
-    
-    if (!response.ok) throw new Error("Failed to update credits");
+    if (updateError) throw new Error("Failed to update credits");
     
     // Update operation status and credit
-    const operationId = operation.OprationID;
-    const oprationUpdateUrl = `https://pegasus-tool-api-operations-default-rtdb.firebaseio.com/Operations/${operationId}.json?auth=wDgquXfCPyqdYqFYC1Vc8kQDjVMpEx0xEvfkqdAC`;
-    const oprationUpdateData = JSON.stringify({
-      Status: "Failed",
-      Credit: "0.0"
-    });
-
-    const oprationResponse = await fetch(oprationUpdateUrl, {
-      method: 'PATCH',
-      body: oprationUpdateData
-    });
+    const { error: operationError } = await supabase
+      .from('operations')
+      .update({
+        status: "Failed",
+        credit: "0.0"
+      })
+      .eq('id', operation.operation_id);
     
-    if (!oprationResponse.ok) throw new Error("Failed to update operation");
+    if (operationError) throw new Error("Failed to update operation");
     
     return true;
   } catch (error) {
@@ -172,13 +217,12 @@ export const refundOperation = async (operation: Operation): Promise<boolean> =>
 };
 
 export const useSharedData = () => {
-  const token = localStorage.getItem("userToken");
   const queryClient = useQueryClient();
   const { t } = useLanguage();
 
   const { data: users = [], isLoading: isLoadingUsers, isSuccess: isUsersSuccess } = useQuery({
     queryKey: ['users'],
-    queryFn: () => fetchUsers(token),
+    queryFn: fetchUsers,
     staleTime: Infinity, // Keep the data fresh indefinitely
     gcTime: 1000 * 60 * 60, // Cache for 1 hour
     meta: {
@@ -209,27 +253,32 @@ export const useSharedData = () => {
 
   // Add credit to user with the "0." format (corrected format)
   const addCreditToUser = async (userId: string, amount: number): Promise<boolean> => {
+    const token = localStorage.getItem("userToken");
     if (!token) return false;
     
     try {
+      // Set auth token
+      supabase.auth.setSession({
+        access_token: token,
+        refresh_token: '',
+      });
+      
       // Find the user in the already loaded data
       const user = users.find(u => u.id === userId);
       if (!user) return false;
       
       // Calculate new credits with the "0." format
-      const currentCredits = parseFloat(user.Credits) || 0;
+      const currentCredits = parseFloat(user.credits) || 0;
       const newCredits = currentCredits + amount;
       const formattedCredits = `${newCredits}.0`;
       
-      const url = `https://pegasus-tool-database-default-rtdb.firebaseio.com/users/${userId}.json?auth=${token}`;
-      const response = await fetch(url, {
-        method: 'PATCH',
-        body: JSON.stringify({
-          Credits: formattedCredits
-        }),
-      });
+      // Update credits in Supabase
+      const { error } = await supabase
+        .from('users')
+        .update({ credits: formattedCredits })
+        .eq('id', userId);
 
-      if (!response.ok) throw new Error("Failed to add credits");
+      if (error) throw new Error("Failed to add credits");
       
       // Refresh users data
       queryClient.invalidateQueries({ queryKey: ['users'] });

@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
-import { AUTH_ENDPOINTS } from "@/config/firebase";
+import { supabase, createUserRecord } from "@/integrations/supabase/client";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -29,27 +29,45 @@ export default function SignUp() {
     setLoading(true);
 
     try {
-      const response = await fetch(AUTH_ENDPOINTS.signUp, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          returnSecureToken: true,
-        }),
+      // تسجيل المستخدم باستخدام Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || "حدث خطأ في إنشاء الحساب");
+      if (error) {
+        throw new Error(error.message || "حدث خطأ في إنشاء الحساب");
       }
 
+      if (!data.user) {
+        throw new Error("لم يتم إنشاء المستخدم");
+      }
+
+      // إنشاء سجل إضافي للمستخدم في جدول المستخدمين
+      const today = new Date().toISOString().split('T')[0];
+      const expiryDate = new Date();
+      expiryDate.setMonth(expiryDate.getMonth() + 1); // افتراضيًا شهر واحد
+      
+      await createUserRecord(data.user.id, {
+        Name: email.split('@')[0], // اسم افتراضي
+        Email: email,
+        Password: password, // يجب تشفير كلمة المرور في الإنتاج
+        Phone: "",
+        Country: "",
+        Activate: "Active",
+        Block: "Not Blocked",
+        Credits: "0.0",
+        User_Type: "Monthly License",
+        Email_Type: "User",
+        Expiry_Time: expiryDate.toISOString().split('T')[0],
+        Start_Date: today,
+        Hwid: "Null",
+        UID: data.user.id
+      });
+
       // حفظ بيانات المستخدم في localStorage
-      localStorage.setItem("userToken", data.idToken);
-      localStorage.setItem("userId", data.localId);
+      localStorage.setItem("userToken", data.session?.access_token || "");
+      localStorage.setItem("userId", data.user.id);
       
       toast({
         title: "تم إنشاء الحساب بنجاح",
