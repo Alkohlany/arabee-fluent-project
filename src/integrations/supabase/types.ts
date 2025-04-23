@@ -9,7 +9,123 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      operations: {
+        Row: {
+          android: string | null
+          baseband: string | null
+          brand: string | null
+          carrier: string | null
+          created_at: string | null
+          credit: string | null
+          hwid: string | null
+          id: string
+          imei: string | null
+          log_operation: string | null
+          model: string | null
+          operation_type: string
+          phone_sn: string | null
+          security_patch: string | null
+          status: string | null
+          time: string | null
+          uid: string | null
+          username: string | null
+        }
+        Insert: {
+          android?: string | null
+          baseband?: string | null
+          brand?: string | null
+          carrier?: string | null
+          created_at?: string | null
+          credit?: string | null
+          hwid?: string | null
+          id?: string
+          imei?: string | null
+          log_operation?: string | null
+          model?: string | null
+          operation_type: string
+          phone_sn?: string | null
+          security_patch?: string | null
+          status?: string | null
+          time?: string | null
+          uid?: string | null
+          username?: string | null
+        }
+        Update: {
+          android?: string | null
+          baseband?: string | null
+          brand?: string | null
+          carrier?: string | null
+          created_at?: string | null
+          credit?: string | null
+          hwid?: string | null
+          id?: string
+          imei?: string | null
+          log_operation?: string | null
+          model?: string | null
+          operation_type?: string
+          phone_sn?: string | null
+          security_patch?: string | null
+          status?: string | null
+          time?: string | null
+          uid?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          activate: string | null
+          block: string | null
+          country: string | null
+          credits: string | null
+          email: string
+          email_type: string | null
+          expiry_time: string | null
+          hwid: string | null
+          id: string
+          name: string | null
+          password: string
+          phone: string | null
+          start_date: string | null
+          uid: string
+          user_type: string | null
+        }
+        Insert: {
+          activate?: string | null
+          block?: string | null
+          country?: string | null
+          credits?: string | null
+          email: string
+          email_type?: string | null
+          expiry_time?: string | null
+          hwid?: string | null
+          id: string
+          name?: string | null
+          password: string
+          phone?: string | null
+          start_date?: string | null
+          uid: string
+          user_type?: string | null
+        }
+        Update: {
+          activate?: string | null
+          block?: string | null
+          country?: string | null
+          credits?: string | null
+          email?: string
+          email_type?: string | null
+          expiry_time?: string | null
+          hwid?: string | null
+          id?: string
+          name?: string | null
+          password?: string
+          phone?: string | null
+          start_date?: string | null
+          uid?: string
+          user_type?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

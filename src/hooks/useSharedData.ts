@@ -1,47 +1,20 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useLanguage } from "./useLanguage";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-interface User {
-  id: string;
-  name: string;
-  activate: string;
-  block: string;
-  country: string;
-  credits: string;
-  email: string;
-  email_type: string;
-  expiry_time: string;
-  hwid: string;
-  password: string;
-  phone: string;
-  start_date: string;
-  uid: string;
-  user_type: string;
-  [key: string]: string; // Add index signature to resolve type issues
+type UserRow = Database['public']['Tables']['users']['Row'];
+type OperationRow = Database['public']['Tables']['operations']['Row'];
+
+interface User extends UserRow {
+  [key: string]: string | null;
 }
 
-interface Operation {
+interface Operation extends OperationRow {
   operation_id: string;
-  operation_type: string;
-  phone_sn: string;
-  brand: string;
-  model: string;
-  imei: string;
-  username: string;
-  credit: string;
-  time: string;
-  status: string;
-  android: string;
-  baseband: string;
-  carrier: string;
-  security_patch: string;
-  uid: string;
-  hwid: string;
-  log_operation: string;
+  [key: string]: string | null;
 }
 
 // Variable to track if the success toast has been shown
@@ -51,35 +24,15 @@ const fetchUsers = async (): Promise<User[]> => {
   const token = localStorage.getItem("userToken");
   if (!token) throw new Error("No authentication token");
   
-  // استخدم الرمز المميز للمصادقة
-  supabase.auth.setSession({
-    access_token: token,
-    refresh_token: '',
-  });
-  
   const { data, error } = await supabase
     .from('users')
     .select('*');
   
   if (error) throw new Error("Failed to fetch users");
   
-  // تنسيق البيانات لتناسب الواجهة الحالية
   return data.map(user => ({
-    id: user.id,
-    name: user.name || "",
-    activate: user.activate || "Active",
-    block: user.block || "Not Blocked",
-    country: user.country || "",
-    credits: user.credits || "0.0",
-    email: user.email || "",
-    email_type: user.email_type || "User",
-    expiry_time: user.expiry_time || "",
-    hwid: user.hwid || "Null",
-    password: user.password || "",
-    phone: user.phone || "",
-    start_date: user.start_date || "",
-    uid: user.uid || "",
-    user_type: user.user_type || "Monthly License"
+    ...user,
+    operation_id: user.id,
   }));
 };
 
@@ -87,52 +40,50 @@ const fetchOperations = async (): Promise<Operation[]> => {
   const token = localStorage.getItem("userToken");
   if (!token) throw new Error("No authentication token");
   
-  // استخدم الرمز المميز للمصادقة
-  supabase.auth.setSession({
-    access_token: token,
-    refresh_token: '',
-  });
-  
   const { data, error } = await supabase
     .from('operations')
     .select('*');
   
   if (error) throw new Error("Failed to fetch operations");
-  
-  // تنسيق البيانات لتناسب الواجهة الحالية
-  const operations = data.map(op => ({
+
+  return data.map(op => ({
+    ...op,
     operation_id: op.id,
-    operation_type: op.operation_type || "",
-    phone_sn: op.phone_sn || "",
-    brand: op.brand || "",
-    model: op.model || "",
-    imei: op.imei || "",
-    username: op.username || "",
-    credit: op.credit || "0.0",
-    time: op.time || new Date().toISOString(),
-    status: op.status || "Pending",
-    android: op.android || "",
-    baseband: op.baseband || "",
-    carrier: op.carrier || "",
-    security_patch: op.security_patch || "",
-    uid: op.uid || "",
-    hwid: op.hwid || "",
-    log_operation: op.log_operation || ""
+    credit: op.credit || "0.0"
   }));
+};
 
-  // Format credit values to "0.0" if they're "0.00"
-  operations.forEach(op => {
-    if (op.credit === "0.00") {
-      op.credit = "0.0";
-    }
-  });
+// إضافة الرصيد للمستخدم
+const addCreditToUser = async (userId: string, amount: number): Promise<boolean> => {
+  const token = localStorage.getItem("userToken");
+  if (!token) return false;
+  
+  try {
+    // احصل على الرصيد الحالي
+    const { data: userData, error: fetchError } = await supabase
+      .from('users')
+      .select('credits')
+      .eq('id', userId)
+      .single();
 
-  // Sort operations by time in descending order
-  return operations.sort((a, b) => {
-    const dateA = new Date(formatTimeString(a.time));
-    const dateB = new Date(formatTimeString(b.time));
-    return dateB.getTime() - dateA.getTime();
-  });
+    if (fetchError || !userData) return false;
+
+    // احسب الرصيد الجديد
+    const currentCredits = parseFloat(userData.credits || "0.0");
+    const newCredits = (currentCredits + amount).toString() + ".0";
+
+    // قم بتحديث الرصيد
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ credits: newCredits })
+      .eq('id', userId);
+
+    if (updateError) return false;
+    return true;
+  } catch (error) {
+    console.error("Error adding credits:", error);
+    return false;
+  }
 };
 
 // Helper function to format time strings
@@ -252,7 +203,7 @@ export const useSharedData = () => {
   };
 
   // Add credit to user with the "0." format (corrected format)
-  const addCreditToUser = async (userId: string, amount: number): Promise<boolean> => {
+  const addCreditToUser2 = async (userId: string, amount: number): Promise<boolean> => {
     const token = localStorage.getItem("userToken");
     if (!token) return false;
     
@@ -299,5 +250,5 @@ export const useSharedData = () => {
   };
 };
 
-// Export the language hook and translation functions
+// Export the language hook
 export { useLanguage } from './useLanguage';
