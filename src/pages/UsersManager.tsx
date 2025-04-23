@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSharedData, useLanguage } from "@/hooks/useSharedData";
@@ -322,11 +323,11 @@ export default function UsersManager() {
               <RefreshCw className="h-5 w-5 mr-2" />
               {t("refresh")}
             </Button>
-            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center" variant="outline">
+            <Button onClick={handleAddCredits} className="flex items-center" variant="outline">
               <PlusCircle className="h-5 w-5 mr-2" />
               {t("addCredit")}
             </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center" variant="outline">
+            <Button onClick={handleAddUser} className="flex items-center" variant="outline">
               <UserPlus className="h-5 w-5 mr-2" />
               {t("addUser")}
             </Button>
@@ -380,7 +381,7 @@ export default function UsersManager() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedUser(user) || setIsViewDialogOpen(true)}
+                            onClick={() => handleViewDetails(user)}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             {t("viewDetails")}
@@ -388,7 +389,7 @@ export default function UsersManager() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedUser(user) || setIsEditDialogOpen(true)}
+                            onClick={() => handleEditUser(user)}
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             {t("edit")}
@@ -396,7 +397,7 @@ export default function UsersManager() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setSelectedUser(user) || setIsRenewDialogOpen(true)}
+                            onClick={() => handleRenewUser(user)}
                           >
                             <RefreshCw className="h-4 w-4 mr-1" />
                             {t("renew")}
