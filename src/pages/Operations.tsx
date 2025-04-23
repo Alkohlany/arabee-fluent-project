@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSharedData } from "@/hooks/useSharedData";
+import { useSharedData, formatTimeString, refundOperation } from "@/hooks/useSharedData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -392,11 +392,12 @@ export default function Operations() {
         </CardContent>
       </Card>
 
-      <OperationDetailsDialog 
-        operation={selectedOperation}
-        isOpen={isDetailsDialogOpen}
-        onClose={() => setIsDetailsDialogOpen(false)}
-      />
+      {selectedOperation && (
+        <OperationDetailsDialog 
+          operation={selectedOperation}
+          onClose={() => setIsDetailsDialogOpen(false)}
+        />
+      )}
     </div>
   );
 }

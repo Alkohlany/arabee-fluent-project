@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Dialog,
@@ -12,13 +13,18 @@ import { formatTimeString } from "@/hooks/useSharedData";
 
 interface OperationDetailsDialogProps {
   operation: any;
+  onClose?: () => void;
 }
 
-export const OperationDetailsDialog: React.FC<OperationDetailsDialogProps> = ({ operation }) => {
+export const OperationDetailsDialog: React.FC<OperationDetailsDialogProps> = ({ operation, onClose }) => {
   const { t } = useLanguage();
 
   return (
-    <Dialog>
+    <Dialog open={!!operation} onOpenChange={(open) => {
+      if (!open && onClose) {
+        onClose();
+      }
+    }}>
       <DialogTrigger asChild>
         <button className="underline text-blue-500">{t("details")}</button>
       </DialogTrigger>
