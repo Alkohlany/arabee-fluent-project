@@ -180,7 +180,7 @@ export const translations: Translations = {
   },
   refundDescription: {
     en: "Credit has been refunded successfully",
-    ar: "تم استرداد ال��صيد بنجاح"
+    ar: "تم استرداد الرصيد بنجاح"
   },
   addUser: {
     en: "Add User",
@@ -581,62 +581,6 @@ export const translations: Translations = {
   system: {
     en: "System",
     ar: "النظام"
-  },
-  usersCountry: {
-    en: "Users by Country",
-    ar: "المستخدمون حسب الدولة"
-  },
-  usersCountryDesc: {
-    en: "Geographic distribution of users",
-    ar: "التوزيع الجغرافي للمستخدمين"
-  },
-  jan: {
-    en: "January",
-    ar: "يناير"
-  },
-  feb: {
-    en: "February",
-    ar: "فبراير"
-  },
-  mar: {
-    en: "March",
-    ar: "مارس"
-  },
-  apr: {
-    en: "April",
-    ar: "أبريل"
-  },
-  may: {
-    en: "May",
-    ar: "مايو"
-  },
-  jun: {
-    en: "June",
-    ar: "يونيو"
-  },
-  jul: {
-    en: "July",
-    ar: "يوليو"
-  },
-  aug: {
-    en: "August",
-    ar: "أغسطس"
-  },
-  sep: {
-    en: "September",
-    ar: "سبتمبر"
-  },
-  oct: {
-    en: "October",
-    ar: "أكتوبر"
-  },
-  nov: {
-    en: "November",
-    ar: "نوفمبر"
-  },
-  dec: {
-    en: "December",
-    ar: "ديسمبر"
   }
 };
 
