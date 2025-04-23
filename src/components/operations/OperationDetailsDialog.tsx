@@ -1,89 +1,132 @@
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLanguage, formatTimeString } from "@/hooks/useSharedData";
-
-interface Operation {
-  OprationID: string;
-  OprationTypes: string;
-  Phone_SN: string;
-  Brand: string;
-  Model: string;
-  Imei: string;
-  UserName: string;
-  Credit: string;
-  Time: string;
-  Status: string;
-  Android: string;
-  Baseband: string;
-  Carrier: string;
-  Security_Patch: string;
-  UID: string;
-  Hwid: string;
-  LogOpration: string;
-}
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useLanguage } from "@/hooks/useLanguage";
+import { formatTimeString } from "@/hooks/useSharedData";
 
 interface OperationDetailsDialogProps {
-  operation: Operation | null;
-  isOpen: boolean;
-  onClose: () => void;
+  operation: any;
 }
 
-export const OperationDetailsDialog = ({ operation, isOpen, onClose }: OperationDetailsDialogProps) => {
-  const { t, language, isRTL } = useLanguage();
-  
-  if (!operation) return null;
-
-  const detailItems = [
-    { label: t("operationID"), value: operation.OprationID },
-    { label: t("operationType"), value: operation.OprationTypes },
-    { label: t("serialNumber"), value: operation.Phone_SN },
-    { label: t("brand"), value: operation.Brand },
-    { label: t("model"), value: operation.Model },
-    { label: t("imei"), value: operation.Imei },
-    { label: t("user"), value: operation.UserName },
-    { label: t("credit"), value: operation.Credit },
-    { label: t("time"), value: formatTimeString(operation.Time) },
-    { label: t("status"), value: operation.Status },
-    { label: t("android"), value: operation.Android },
-    { label: t("baseband"), value: operation.Baseband },
-    { label: t("carrier"), value: operation.Carrier },
-    { label: t("securityPatch"), value: operation.Security_Patch },
-    { label: t("uid"), value: operation.UID },
-    { label: t("hwid"), value: operation.Hwid },
-  ];
+export const OperationDetailsDialog: React.FC<OperationDetailsDialogProps> = ({ operation }) => {
+  const { t } = useLanguage();
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[80vh]" dir={isRTL ? "rtl" : "ltr"}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="underline text-blue-500">{t("details")}</button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{t("operationDetails")}</DialogTitle>
+          <DialogDescription>
+            {t("completeUserInfo")}
+          </DialogDescription>
         </DialogHeader>
-        
-        <ScrollArea className="h-[60vh]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
-            {detailItems.map((item, index) => (
-              <div key={index} className="border rounded-md p-3">
-                <div className="text-sm text-muted-foreground">{item.label}</div>
-                <div className="font-medium mt-1">{item.value}</div>
-              </div>
-            ))}
-            
-            {operation.LogOpration && (
-              <div className="col-span-1 md:col-span-2 border rounded-md p-3">
-                <div className="text-sm text-muted-foreground">Log</div>
-                <pre className="mt-2 whitespace-pre-wrap text-sm bg-muted p-2 rounded">
-                  {operation.LogOpration}
-                </pre>
-              </div>
-            )}
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="operationID" className="text-right font-medium">
+              {t("operationID")}
+            </label>
+            <div className="col-span-3 font-bold">{operation?.OprationID}</div>
           </div>
-        </ScrollArea>
-        
-        <DialogFooter>
-          <Button onClick={onClose}>{t("close")}</Button>
-        </DialogFooter>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="operationType" className="text-right font-medium">
+              {t("operationType")}
+            </label>
+            <div className="col-span-3">{operation?.OprationTypes}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="serialNumber" className="text-right font-medium">
+              {t("serialNumber")}
+            </label>
+            <div className="col-span-3">{operation?.Phone_SN}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="brand" className="text-right font-medium">
+              {t("brand")}
+            </label>
+            <div className="col-span-3">{operation?.Brand}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="model" className="text-right font-medium">
+              {t("model")}
+            </label>
+            <div className="col-span-3">{operation?.Model}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="imei" className="text-right font-medium">
+              {t("imei")}
+            </label>
+            <div className="col-span-3">{operation?.Imei}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="user" className="text-right font-medium">
+              {t("user")}
+            </label>
+            <div className="col-span-3">{operation?.UserName}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="credit" className="text-right font-medium">
+              {t("credit")}
+            </label>
+            <div className="col-span-3">{operation?.Credit}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="time" className="text-right font-medium">
+              {t("time")}
+            </label>
+            <div className="col-span-3">{formatTimeString(operation?.Time)}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="status" className="text-right font-medium">
+              {t("status")}
+            </label>
+            <div className="col-span-3">{operation?.Status}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="android" className="text-right font-medium">
+              {t("android")}
+            </label>
+            <div className="col-span-3">{operation?.Android}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="baseband" className="text-right font-medium">
+              {t("baseband")}
+            </label>
+            <div className="col-span-3">{operation?.Baseband}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="carrier" className="text-right font-medium">
+              {t("carrier")}
+            </label>
+            <div className="col-span-3">{operation?.Carrier}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="securityPatch" className="text-right font-medium">
+              {t("securityPatch")}
+            </label>
+            <div className="col-span-3">{operation?.Security_Patch}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="uid" className="text-right font-medium">
+              {t("uid")}
+            </label>
+            <div className="col-span-3">{operation?.UID}</div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="hwid" className="text-right font-medium">
+              {t("hwid")}
+            </label>
+            <div className="col-span-3">{operation?.Hwid}</div>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );

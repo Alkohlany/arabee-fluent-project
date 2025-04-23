@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSharedData, useLanguage } from "@/hooks/useSharedData";
+import { useSharedData } from "@/hooks/useSharedData";
+import { useLanguage } from "@/hooks/useLanguage";
 import {
   Table,
   TableBody,
@@ -322,11 +323,11 @@ export default function UsersManager() {
               <RefreshCw className="h-5 w-5 mr-2" />
               {t("refresh")}
             </Button>
-            <Button onClick={() => setIsAddCreditsDialogOpen(true)} className="flex items-center">
+            <Button onClick={handleAddCredits} className="flex items-center">
               <PlusCircle className="h-5 w-5 mr-2" />
               {t("addCredit")}
             </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)} className="flex items-center">
+            <Button onClick={handleAddUser} className="flex items-center">
               <UserPlus className="h-5 w-5 mr-2" />
               {t("addUser")}
             </Button>

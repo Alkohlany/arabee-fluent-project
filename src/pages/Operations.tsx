@@ -1,5 +1,6 @@
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSharedData } from "@/hooks/useSharedData";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -21,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/sonner";
-import { useSharedData, formatTimeString, useLanguage, refundOperation } from "@/hooks/useSharedData";
 import { OperationDetailsDialog } from "@/components/operations/OperationDetailsDialog";
 
 interface Operation {
@@ -51,7 +51,6 @@ export default function Operations() {
   const [selectedOperation, setSelectedOperation] = useState<Operation | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
 
-  // Filter operations based on search term
   const filteredOperations = operations.filter((op) => {
     if (searchTerm.trim() === "") return true;
     const searchLower = searchTerm.toLowerCase();
@@ -67,11 +66,9 @@ export default function Operations() {
     );
   });
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(8);
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredOperations.slice(indexOfFirstItem, indexOfLastItem);
@@ -84,7 +81,6 @@ export default function Operations() {
   };
 
   const renderPagination = () => {
-    // Only show pagination if we have items
     if (filteredOperations.length === 0) return null;
 
     return (
@@ -98,7 +94,6 @@ export default function Operations() {
           </PaginationItem>
 
           {totalPages <= 7 ? (
-            // If fewer than 7 pages, show all
             [...Array(totalPages)].map((_, i) => (
               <PaginationItem key={i}>
                 <PaginationLink
@@ -110,9 +105,7 @@ export default function Operations() {
               </PaginationItem>
             ))
           ) : (
-            // If more than 7 pages, show smart pagination
             <>
-              {/* Always show first page */}
               <PaginationItem>
                 <PaginationLink
                   onClick={() => paginate(1)}
@@ -122,14 +115,12 @@ export default function Operations() {
                 </PaginationLink>
               </PaginationItem>
 
-              {/* Show ellipsis if current page is more than 3 */}
               {currentPage > 3 && (
                 <PaginationItem>
                   <PaginationEllipsis />
                 </PaginationItem>
               )}
 
-              {/* Show current page and surrounding pages */}
               {[...Array(5)].map((_, i) => {
                 const pageNum = currentPage - 2 + i;
                 if (pageNum > 1 && pageNum < totalPages) {
@@ -147,14 +138,12 @@ export default function Operations() {
                 return null;
               })}
 
-              {/* Show ellipsis if current page is less than totalPages - 2 */}
               {currentPage < totalPages - 2 && (
                 <PaginationItem>
                   <PaginationEllipsis />
                 </PaginationItem>
               )}
 
-              {/* Always show last page */}
               <PaginationItem>
                 <PaginationLink
                   onClick={() => paginate(totalPages)}
@@ -177,13 +166,11 @@ export default function Operations() {
     );
   };
 
-  // Handle view details
   const handleViewDetails = (operation: Operation) => {
     setSelectedOperation(operation);
     setIsDetailsDialogOpen(true);
   };
 
-  // Handle refund
   const handleRefund = async (operation: Operation) => {
     const success = await refundOperation(operation);
     
@@ -199,7 +186,6 @@ export default function Operations() {
     }
   };
 
-  // Update time display in tables
   const renderTable = (operations: Operation[]) => (
     <div className="rounded-md border">
       <Table>
@@ -276,7 +262,6 @@ export default function Operations() {
   };
 
   const exportToCSV = () => {
-    // Create CSV content
     const headers = [
       t("operationID"),
       t("operationType"),
@@ -322,7 +307,6 @@ export default function Operations() {
 
     const csvContent = csvRows.join('\n');
 
-    // Create blob and download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -408,7 +392,6 @@ export default function Operations() {
         </CardContent>
       </Card>
 
-      {/* Operation Details Dialog */}
       <OperationDetailsDialog 
         operation={selectedOperation}
         isOpen={isDetailsDialogOpen}
