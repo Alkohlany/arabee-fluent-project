@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useLanguage } from "./useLanguage";
@@ -5,16 +6,50 @@ import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
+// Define types based on Supabase database schema
 type UserRow = Database['public']['Tables']['users']['Row'];
 type OperationRow = Database['public']['Tables']['operations']['Row'];
 
-interface User extends UserRow {
-  [key: string]: string | null;
+// Extended User interface to match the structure used in the app
+export interface User extends UserRow {
+  Name?: string;
+  Email?: string;
+  Password?: string;
+  Phone?: string;
+  Country?: string;
+  Activate?: string;
+  Block?: string;
+  Credits?: string;
+  User_Type?: string;
+  Email_Type?: string;
+  Expiry_Time?: string;
+  Start_Date?: string;
+  Hwid?: string;
+  UID?: string;
+  [key: string]: any;
 }
 
-interface Operation extends OperationRow {
-  operation_id: string;
-  [key: string]: string | null;
+// Extended Operation interface to match the structure used in the app
+export interface Operation {
+  operation_id?: string;
+  OprationID?: string;
+  OprationTypes?: string;
+  Phone_SN?: string;
+  Brand?: string;
+  Model?: string;
+  Imei?: string;
+  UserName?: string;
+  Credit?: string;
+  Time?: string;
+  Status?: string;
+  Android?: string;
+  Baseband?: string;
+  Carrier?: string;
+  Security_Patch?: string;
+  UID?: string;
+  Hwid?: string;
+  LogOpration?: string;
+  [key: string]: any;
 }
 
 // Variable to track if the success toast has been shown
@@ -30,9 +65,24 @@ const fetchUsers = async (): Promise<User[]> => {
   
   if (error) throw new Error("Failed to fetch users");
   
+  // Map Supabase data to the structure expected by the app
   return data.map(user => ({
     ...user,
     operation_id: user.id,
+    Name: user.name,
+    Email: user.email,
+    Password: user.password,
+    Phone: user.phone,
+    Country: user.country,
+    Activate: user.activate,
+    Block: user.block,
+    Credits: user.credits,
+    User_Type: user.user_type,
+    Email_Type: user.email_type,
+    Expiry_Time: user.expiry_time,
+    Start_Date: user.start_date,
+    Hwid: user.hwid,
+    UID: user.uid
   }));
 };
 
@@ -46,10 +96,27 @@ const fetchOperations = async (): Promise<Operation[]> => {
   
   if (error) throw new Error("Failed to fetch operations");
 
+  // Map Supabase data to the structure expected by the app
   return data.map(op => ({
     ...op,
     operation_id: op.id,
-    credit: op.credit || "0.0"
+    OprationID: op.id,
+    OprationTypes: op.operation_type,
+    Phone_SN: op.phone_sn,
+    Brand: op.brand,
+    Model: op.model,
+    Imei: op.imei,
+    UserName: op.username,
+    Credit: op.credit || "0.0",
+    Time: op.time,
+    Status: op.status,
+    Android: op.android,
+    Baseband: op.baseband,
+    Carrier: op.carrier,
+    Security_Patch: op.security_patch,
+    UID: op.uid,
+    Hwid: op.hwid,
+    LogOpration: op.log_operation
   }));
 };
 
@@ -105,7 +172,7 @@ export const formatTimeString = (timeStr: string): string => {
 };
 
 // Refund operation function - adapted for Supabase
-export const refundOperation = async (operation: any): Promise<boolean> => {
+export const refundOperation = async (operation: Operation): Promise<boolean> => {
   if (!operation) return false;
   
   const token = localStorage.getItem("userToken");
@@ -119,14 +186,14 @@ export const refundOperation = async (operation: any): Promise<boolean> => {
     });
     
     // The refund amount from the operation
-    const refundAmountStr = operation.credit;
-    const refundAmount = parseFloat(refundAmountStr) || 0;
+    const refundAmountStr = operation.Credit;
+    const refundAmount = parseFloat(refundAmountStr || "0") || 0;
     
     // Get current credits for the user
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('credits')
-      .eq('id', operation.uid)
+      .eq('id', operation.UID)
       .single();
     
     if (userError) throw new Error("Failed to get user credits");
@@ -145,7 +212,7 @@ export const refundOperation = async (operation: any): Promise<boolean> => {
     const { error: updateError } = await supabase
       .from('users')
       .update({ credits: newCredit.toString() + ".0" })
-      .eq('id', operation.uid);
+      .eq('id', operation.UID);
     
     if (updateError) throw new Error("Failed to update credits");
     

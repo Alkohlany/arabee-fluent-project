@@ -13,6 +13,7 @@ import Operations from "./pages/Operations";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import UserEdit from "./pages/UserEdit";
+import DataMigration from "./pages/DataMigration";
 import AppLayout from "./components/layout/AppLayout";
 import { LanguageProvider } from "./hooks/useLanguage";
 
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/operations" element={<AppLayout><Operations /></AppLayout>} />
             <Route path="/settings" element={<AppLayout><Settings /></AppLayout>} />
             <Route path="/user-edit/:userId" element={<AppLayout><UserEdit /></AppLayout>} />
+            <Route path="/data-migration" element={<AppLayout><DataMigration /></AppLayout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
